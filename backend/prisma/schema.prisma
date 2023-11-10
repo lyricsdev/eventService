@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    String @id @default(uuid())
+  name  String
+  teams Team[]
+  teamCreation Team[] @relation(name: "creatorTeam")
+  eventJudging Event[] @relation(name: "judge")
+}
+
+model Team {
+  id                   String      @id @default(uuid())
+  name                 String
+  creatorId String
+  creator User @relation(fields: [creatorId],references: [id],name: "creatorTeam")
+  users                User[]
+  invLink              Invitation?
+  eventId              String
+  selectedEventThemeId Int?
+  eventThemeId         eventTheme?  @relation(fields: [selectedEventThemeId], references: [id])
+  grades Grade[]
+  event Event @relation(fields: [eventId], references: [id])
+}
+
+model Invitation {
+  id     Int     @id @default(autoincrement())
+  link   String  @default(uuid())
+  TeamId String  @unique
+  type Int
+  closed Boolean
+  team   Team    @relation(fields: [TeamId], references: [id])
+}
+model Event {
+  id          String       @id @default(uuid())
+  name        String
+  judges User[] @relation(name: "judge")
+  creator String
+  dateStart   DateTime
+  dateEnd     DateTime
+  eventThemes eventTheme[]
+  teams       Team[]
+  grades Grade[]
+}
+
+model eventTheme {
+  id      Int    @id @unique @default(autoincrement())
+  name    String
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id])
+  Team    Team[]
+}
+
+model criteria {
+  id Int @unique @default(autoincrement())
+  name String
+  desk String
+  grades Grade[] 
+}
+model Grade {
+  id Int @unique @default(autoincrement())
+  grade Int
+  teamId String
+  team   Team  @relation(fields: [teamId], references: [id])
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id])
+  criteriaId Int
+  criteria criteria  @relation(fields: [criteriaId], references: [id])
+}
